@@ -23,10 +23,6 @@ export const getAllContactsController = async (req, res) => {
     filter,
   });
 
-  if (!response.contacts.length) {
-    throw new createHttpError(404, 'Couldn`t find contacts by this filters!');
-  }
-
   res.status(200).json({
     status: 200,
     message: 'Successfully found contacts!',

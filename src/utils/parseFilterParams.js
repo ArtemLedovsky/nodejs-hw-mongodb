@@ -10,16 +10,19 @@ const parseType = (value) => {
   if (!value) return;
   const keys = ['work', 'personal', 'home'];
   if (!keys.includes(value)) {
-    throw new createHttpError(404, 'Contacts not found<<<<');
+    throw new createHttpError(
+      400,
+      "Contact type should be one of: 'work', 'personal','home'",
+    );
   }
 
   return value;
 };
 
 export const parseFilterParams = (query) => {
-  const { isFavourite, contactType } = query;
+  const { isFavourite, type } = query;
   const parsedIsFavourite = parseIsFavourite(isFavourite);
-  const parsedType = parseType(contactType);
+  const parsedType = parseType(type);
 
   return {
     isFavourite: parsedIsFavourite,
