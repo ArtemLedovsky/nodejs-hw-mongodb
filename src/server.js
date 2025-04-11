@@ -1,3 +1,4 @@
+import path from 'node:path';
 import express from 'express';
 // import pino from 'pino-http';
 import cors from 'cors';
@@ -20,6 +21,7 @@ function setupServer() {
   //     },
   //   }),
   // );
+  app.use('/uploads', express.static(path.resolve('uploads')));
   app.use(cookieParser());
   app.use(router);
 

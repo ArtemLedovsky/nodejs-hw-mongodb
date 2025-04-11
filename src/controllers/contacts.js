@@ -54,14 +54,20 @@ export const getContactByIdController = async (req, res, next) => {
 };
 
 export const createContactController = async (req, res) => {
-  let photo;
-  if (getEnvVar('UPLOAD_TO_CLOUDINARY') === 'true') {
-    const result = await uploadToCloudinary(req.file.path);
+  let photo = null;
 
-    photo = result.secure_url;
-  } else {
-    await fs.rename(req.file.path, path.resolve('uploads', req.file.filename));
-    photo = `${getEnvVar('APP_DOMAIN')}/uploads/${req.file.filename}`;
+  if (req.file) {
+    if (getEnvVar('UPLOAD_TO_CLOUDINARY') === 'true') {
+      const result = await uploadToCloudinary(req.file.path);
+
+      photo = result.secure_url;
+    } else {
+      await fs.rename(
+        req.file.path,
+        path.resolve('uploads', req.file.filename),
+      );
+      photo = `${getEnvVar('APP_DOMAIN')}/uploads/${req.file.filename}`;
+    }
   }
 
   const contact = { ...req.body, userId: req.user._id, photo };
@@ -80,16 +86,17 @@ export const updateContactController = async (req, res) => {
   const userId = req.user._id;
 
   let photo;
-
-  if (!req.file) {
-    photo = null;
-  } else if (getEnvVar('UPLOAD_TO_CLOUDINARY') === 'true') {
-    const result = await uploadToCloudinary(req.file.path);
-
-    photo = result.secure_url;
-  } else {
-    await fs.rename(req.file.path, path.resolve('uploads', req.file.filename));
-    photo = `${getEnvVar('APP_DOMAIN')}/uploads/${req.file.filename}`;
+  if (req.file) {
+    if (getEnvVar('UPLOAD_TO_CLOUDINARY') === 'true') {
+      const result = await uploadToCloudinary(req.file.path);
+      photo = result.secure_url;
+    } else {
+      await fs.rename(
+        req.file.path,
+        path.resolve('uploads', req.file.filename),
+      );
+      photo = `${getEnvVar('APP_DOMAIN')}/uploads/${req.file.filename}`;
+    }
   }
 
   const result = await updateContact(id, userId, { ...body, photo });
