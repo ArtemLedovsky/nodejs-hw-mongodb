@@ -105,10 +105,13 @@ export const sendPasswordReset = async (email) => {
     TEMPLATES_DIR,
     'reset-password-email.html',
   );
+
   const templateSource = (
     await fs.readFile(resetPasswordTemplatePath)
   ).toString();
+
   const template = handlebars.compile(templateSource);
+
   const html = template({
     name: user.name,
     link: `${getEnvVar('APP_DOMAIN')}/reset-password?token=${resetToken}`,
@@ -145,6 +148,7 @@ export const resetPassword = async (token, password) => {
       { _id: user._id },
       { password: hashedPassword },
     );
+    await SessionsCollection.deleteOne({ userId: user._id });
   } catch (error) {
     if (
       error.name === 'TokenExpiredError' ||

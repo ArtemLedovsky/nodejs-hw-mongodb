@@ -1,3 +1,8 @@
+import * as fs from 'node:fs/promises';
+import path from 'node:path';
+
+import createHttpError from 'http-errors';
+
 import {
   createContact,
   getAllContacts,
@@ -5,10 +10,11 @@ import {
   updateContact,
   deleteContact,
 } from '../services/contacts.js';
-import createHttpError from 'http-errors';
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
 import { parseFilterParams } from '../utils/parseFilterParams.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
+import { uploadToCloudinary } from '../utils/uploadToCloudinary.js';
 
 export const getAllContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -48,7 +54,17 @@ export const getContactByIdController = async (req, res, next) => {
 };
 
 export const createContactController = async (req, res) => {
-  const contact = { ...req.body, userId: req.user._id };
+  let photo;
+  if (getEnvVar('UPLOAD_TO_CLOUDINARY') === 'true') {
+    const result = await uploadToCloudinary(req.file.path);
+
+    photo = result.secure_url;
+  } else {
+    await fs.rename(req.file.path, path.resolve('uploads', req.file.filename));
+    photo = `${getEnvVar('APP_DOMAIN')}/uploads/${req.file.filename}`;
+  }
+
+  const contact = { ...req.body, userId: req.user._id, photo };
   const result = await createContact(contact);
 
   res.status(201).send({
@@ -62,7 +78,21 @@ export const updateContactController = async (req, res) => {
   const { id } = req.params;
   const body = req.body;
   const userId = req.user._id;
-  const result = await updateContact(id, body, userId);
+
+  let photo;
+
+  if (!req.file) {
+    photo = null;
+  } else if (getEnvVar('UPLOAD_TO_CLOUDINARY') === 'true') {
+    const result = await uploadToCloudinary(req.file.path);
+
+    photo = result.secure_url;
+  } else {
+    await fs.rename(req.file.path, path.resolve('uploads', req.file.filename));
+    photo = `${getEnvVar('APP_DOMAIN')}/uploads/${req.file.filename}`;
+  }
+
+  const result = await updateContact(id, userId, { ...body, photo });
 
   if (!result) {
     throw new createHttpError(404, 'Contact not found');
