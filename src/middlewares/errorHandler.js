@@ -4,7 +4,8 @@ export const errorHandler = (error, req, res, next) => {
   if (createHttpError.isHttpError(error)) {
     return res.status(error.status).send({
       status: error.status,
-      message: error.message,
+      message: error.name,
+      data: { message: error.message },
     });
   }
 

@@ -1,0 +1,75 @@
+tags:
+  - Contacts
+summary: Patch contact
+description: Update contact by id
+operationId: patchContactById
+security:
+  - bearerAuth: []
+parameters:
+  - name: id
+    in: path
+    schema:
+      type: string
+      example: 67fbfb8e2ce7a9d9ad673410
+requestBody:
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          name:
+            type: string
+            example: Johnny Docker
+            description: Contact`s name
+          phoneNumber:
+            type: string
+            example: '+123456789'
+            description: Contact`s phone
+          contactType:
+            type: string
+            enum: ['work', 'personal', 'home']
+            default: 'personal'
+            example: 'personal'
+            description: Contact`s type
+          email:
+            type: string
+            example: myemail@gmail.com
+            default: null
+            description: Contact`s email
+          isFavourite:
+            type: boolean
+            default: false
+            example: false
+            description: Is contact in favourite list
+          photo:
+            type: string
+            format: binary
+            default: null
+            description: Contact`s photo
+responses:
+  '200':
+    description: 'Successfully patch contact'
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully patched contact with id 67fbfb8e2ce7a9d9ad673410!
+            data:
+              type: object
+              $ref: '../../../components/schemas/contact.yaml'
+  '401':
+    $ref: '../../../components/responses/401.yaml'
+  '404':
+    $ref: '../../../components/responses/404.yaml'
+  '500':
+    $ref: '../../../components/responses/500.yaml'

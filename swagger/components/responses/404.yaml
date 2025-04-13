@@ -1,0 +1,25 @@
+description: 'NotFoundError'
+content:
+  application/json:
+    schema:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: NotFoundError
+        data:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              example: User not found
+              description: 'Can be one of: "Contact not found", "Session not found", "Route not found", "User not found".'

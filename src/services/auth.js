@@ -14,6 +14,7 @@ import {
 } from '../constants/index.js';
 import { sendMail } from '../utils/sendMail.js';
 import { getEnvVar } from '../utils/getEnvVar.js';
+import { validateCode } from '../utils/googleOAuth.js';
 
 export const registerUser = async (payload) => {
   const user = await UsersCollection.findOne({ email: payload.email });
@@ -158,4 +159,39 @@ export const resetPassword = async (token, password) => {
     }
     throw createHttpError(500, error.message);
   }
+};
+
+export const loginOrRegister = async (code) => {
+  const loginTicket = await validateCode(code);
+  const payload = loginTicket.getPayload();
+  if (!payload) throw createHttpError(401, 'Unauthorized');
+  const user = await UsersCollection.findOne({ email: payload.email });
+  if (!user) {
+    const password = await bcrypt.hash(randomBytes(30).toString('base64'), 10);
+
+    const newUser = await UsersCollection.create({
+      email: payload.email,
+      name: payload.name,
+      password,
+    });
+    console.log(newUser);
+
+    return await SessionsCollection.create({
+      userId: newUser._id,
+      accessToken: randomBytes(30).toString('base64'),
+      refreshToken: randomBytes(30).toString('base64'),
+      accessTokenValidUntil: new Date(Date.now() + FIFTEEN_MINUTES),
+      refreshTokenValidUntil: new Date(Date.now() + THIRTY_DAYS),
+    });
+  }
+
+  await SessionsCollection.deleteOne({ userId: user.userId });
+
+  return await SessionsCollection.create({
+    userId: user._id,
+    accessToken: randomBytes(30).toString('base64'),
+    refreshToken: randomBytes(30).toString('base64'),
+    accessTokenValidUntil: new Date(Date.now() + FIFTEEN_MINUTES),
+    refreshTokenValidUntil: new Date(Date.now() + THIRTY_DAYS),
+  });
 };
